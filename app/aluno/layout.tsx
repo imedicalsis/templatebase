@@ -1,0 +1,52 @@
+// Localização: app/aluno/layout.tsx
+// Lógica de autenticação e autorização, versão limpa.
+
+import { auth } from "@clerk/nextjs/server"; // Importa auth para Server Components
+import { redirect } from "next/navigation"; // Importa redirect para navegação
+
+export default async function AlunoLayout({
+  // 'async' é necessário para 'auth()'
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { userId, sessionClaims } = auth(); // Obtém o ID do usuário e os claims da sessão
+
+  // Tenta ler o 'role' diretamente dos sessionClaims
+  // Isso assume que o seu JWT Template no Clerk está configurado para adicionar:
+  // { "role": "{{user.public_metadata.role}}" }
+  const userRole = sessionClaims?.role as string;
+
+  // Se não houver userId (usuário não logado) OU
+  // se o papel não for "ALUNO" E também não for "ADMIN",
+  // redireciona para a página inicial.
+  if (!userId || (userRole !== "ALUNO" && userRole !== "ADMIN")) {
+    // Log de acesso negado pode ser útil manter, ou remover se preferir.
+    console.log(
+      `AlunoLayout: Acesso Negado ou Papel Inválido. UserID: ${userId}, Role: ${userRole}. Redirecionando para /.`,
+    );
+    redirect("/"); // Redireciona para a página inicial
+  }
+
+  // Se chegou até aqui, o usuário está logado e tem um papel permitido (ALUNO ou ADMIN).
+  // console.log(
+  //   `ALUNO LAYOUT - Acesso Permitido para UserID: ${userId} com Papel: ${userRole}.`,
+  // ); // Log de acesso permitido removido para limpeza.
+
+  return (
+    <div
+      className="min-h-screen bg-sky-50" // Fundo diferente para a área do aluno
+      style={{ paddingTop: "100px" }} // Mantém um paddingTop para a NavBar fixa. Ajuste conforme necessário.
+      // Ou use uma classe Tailwind como 'pt-20' ou 'pt-24'
+    >
+      {/* Você pode adicionar um header ou sidebar específico para o aluno aqui */}
+      <div className="p-6">
+        {" "}
+        {/* Padding interno para o conteúdo */}
+        {/* Removida a linha de texto que mostrava ClerkID e Papel para um layout mais limpo */}
+        {children}{" "}
+        {/* Aqui será renderizado o conteúdo de app/aluno/page.tsx */}
+      </div>
+    </div>
+  );
+}

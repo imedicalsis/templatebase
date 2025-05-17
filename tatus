@@ -1,0 +1,200 @@
+[33mcommit 21e22acee4239256f9ee865665e4a6ec06b96e4f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: imedicalsis <sitemedicalstudents@gmail.com>
+Date:   Fri May 16 20:12:26 2025 +0000
+
+    Assistant checkpoint: Criar estrutura básica de admin e aluno com proteção de rotas
+    
+    Assistant generated file changes:
+    - middleware.ts: Implementar middleware para controle de acesso baseado em roles
+    - app/admin/layout.tsx: Criar layout para área administrativa
+    - app/admin/page.tsx: Criar página inicial do admin
+    - app/aluno/layout.tsx: Criar layout para área do aluno
+    - app/aluno/page.tsx: Criar página inicial do aluno
+    
+    ---
+    
+    User prompt:
+    
+    ja configurei o webhook. vamos começar a implementar as funcionalidades especificas. veja o nosso plano de execução e vamos seguir de onde paramos
+    
+    Replit-Commit-Author: Assistant
+    Replit-Commit-Session-Id: 06db14f4-e05b-4749-b257-2a4aee77b958
+
+[33mcommit 057fa5cf43f06fcc68558542d9d0020302a8b468[m
+Author: sitemedicalstud <42745155-sitemedicalstud@users.noreply.replit.com>
+Date:   Fri May 16 19:53:38 2025 +0000
+
+    Checkpoint before assistant change: Improve user data handling and security in Clerk webhook integration
+    
+    Enhances Clerk webhook processing with improved validation, error handling, and data synchronization with Prisma.
+    
+    Replit-Commit-Author: Assistant
+
+[33mcommit 49e924da8d5389e95c323e86e82467543da1d9bb[m
+Author: imedicalsis <sitemedicalstudents@gmail.com>
+Date:   Fri May 16 19:27:21 2025 +0000
+
+    Assistant checkpoint: Configurar webhook do Clerk
+    
+    Assistant generated file changes:
+    - app/api/webhooks/clerk/route.ts: Criar rota para webhook do Clerk
+    
+    ---
+    
+    User prompt:
+    
+    Vamos de webhook
+    
+    Replit-Commit-Author: Assistant
+    Replit-Commit-Session-Id: 06db14f4-e05b-4749-b257-2a4aee77b958
+
+[33mcommit 79aa45c9d6519f71d23201d462568a29797964f0[m
+Author: sitemedicalstud <42745155-sitemedicalstud@users.noreply.replit.com>
+Date:   Fri May 16 19:01:31 2025 +0000
+
+    Checkpoint before assistant change: Upgrade Next.js version to a more stable release for better performance
+    
+    Downgrade Next.js from canary version 14.3.0-canary.57 to stable version 14.2.28, and add middleware.ts to protect routes.
+    
+    Replit-Commit-Author: Assistant
+
+[33mcommit 3be40205d7cdf56082cd284f07f12251b9208f79[m[33m ([m[1;31morigin/main[m[33m)[m
+Merge: 7f1e96c ff750e3
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Wed Oct 2 13:28:58 2024 -0700
+
+    Merge pull request #90 from bmorrisondev/main
+    
+    Update README Clerk Link
+
+[33mcommit ff750e3a42fb2874ba40ce70f244b68da8639fe2[m
+Author: Brian Morrison II <brian@brianmorrison.me>
+Date:   Wed Oct 2 15:23:33 2024 -0500
+
+    update readme link
+
+[33mcommit 7f1e96c0b3063557735524946282cd37c4cd1dfe[m
+Merge: faa0218 3680d6b
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Mon Sep 30 17:53:23 2024 -0700
+
+    Merge pull request #89 from bmorrisondev/main
+    
+    Implement Clerk for authentication
+
+[33mcommit 3680d6bce80fa5db7aba745ce6d791b4be94328a[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Mon Sep 30 17:52:09 2024 -0700
+
+    fix sign in button
+
+[33mcommit 2c8b0c468bb17097946fcc1350846e94150da34d[m
+Author: Brian Morrison II <brian@brianmorrison.me>
+Date:   Thu Sep 26 12:06:19 2024 -0400
+
+    Update README.md
+
+[33mcommit c1cde3137bf28143c7b99b65bdee68574ac40d46[m
+Author: Brian Morrison II <brian@brianmorrison.me>
+Date:   Thu Sep 26 11:57:58 2024 -0400
+
+    Update README.md
+
+[33mcommit e52a41f8e523554c9a466f307dc310c864e13df3[m
+Author: Brian Morrison II <brian@brianmorrison.me>
+Date:   Thu Sep 26 11:56:20 2024 -0400
+
+    Update README.md
+
+[33mcommit fdc927f2b5f31912c6d72b9b4e0dbab74281239c[m
+Author: Brian Morrison II <brian@brianmorrison.me>
+Date:   Thu Sep 26 10:42:32 2024 -0500
+
+    Add help comment
+
+[33mcommit 7dad1554f9c3dc527eff1e3babf481efbd6f0c49[m
+Author: Brian Morrison II <brian@brianmorrison.me>
+Date:   Thu Sep 26 10:31:24 2024 -0500
+
+    fix url
+
+[33mcommit 698836866e39aa2ab44ef4477f7cb6123a0804a4[m
+Author: Brian Morrison II <brian@brianmorrison.me>
+Date:   Thu Sep 26 10:27:34 2024 -0500
+
+    remove prisma, update deploy url
+
+[33mcommit faa0218317a095c47a1ef11b2c5028a40f13739e[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Fri Jun 7 12:43:21 2024 -0700
+
+    edit links
+
+[33mcommit d4d2c893874b1342fcb9a40f2754747cd83ae5f4[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Fri Jun 7 12:43:07 2024 -0700
+
+    add backlink
+
+[33mcommit ef8987fc80a490e9d3718a6c449d0b31d39b583a[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Thu May 16 23:06:45 2024 +0300
+
+    remove dub stuff
+
+[33mcommit 0c141dde84e57777517bc6237203632c39f6f533[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Mon May 13 22:01:22 2024 +0300
+
+    bump version
+
+[33mcommit ed646bf8c537ee8a8eb17c4529ca351fdfe29bc3[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Mon May 13 21:55:48 2024 +0300
+
+    bump version
+
+[33mcommit a63585514974b4d28bf83ebe03ac3a9fae66bfe1[m
+Merge: d22a1d5 d6f46fb
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Mon May 13 18:57:53 2024 +0300
+
+    Merge pull request #84 from steven-tey/dub
+    
+    Dub conversion tracking test
+
+[33mcommit d6f46fb8a8a80040b3f0b698c2246a25f48fa943[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Mon May 13 18:55:44 2024 +0300
+
+    remove providers
+
+[33mcommit 7b665a239b3ea1715495b21a01dced16895bf177[m[33m ([m[1;34mgrafted[m[33m)[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Mon May 13 18:54:21 2024 +0300
+
+    Update options.ts
+
+[33mcommit d22a1d55699aa4f337f4b5156d3363570ffab69d[m
+Merge: c60c090 7984d8c
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Fri Apr 19 18:34:25 2024 +0300
+
+    Merge pull request #72 from Avivhdr/patch-1
+    
+    Add missing closing tag
+
+[33mcommit c60c090a0ff8bd1291fe71fcefd944a0e92f9524[m[33m ([m[1;34mgrafted[m[33m)[m
+Author: Steven Tey <stevensteel97@gmail.com>
+Date:   Fri Apr 19 18:33:24 2024 +0300
+
+    Update pnpm-lock.yaml
+
+[33mcommit 7984d8c33362c0c5e6beb468c208e9459c3fa190[m[33m ([m[1;34mgrafted[m[33m)[m
+Author: Aviv Hadar <Avivhdr@gmail.com>
+Date:   Sun Nov 12 15:24:46 2023 +0100
+
+    Add missing closing tag
+    
+    Adding the closing tag solves the error when trying to view the  readme in the editor using extensions like:
+    https://github.com/xyc/vscode-mdx-preview

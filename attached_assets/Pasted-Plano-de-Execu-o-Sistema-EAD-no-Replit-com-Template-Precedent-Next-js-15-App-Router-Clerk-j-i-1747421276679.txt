@@ -1,0 +1,109 @@
+Plano de Execução (Sistema EAD no Replit com Template Precedent + Next.js 15 App Router + Clerk já integrado)
+
+Pré-requisito:
+
+Template Precedent clonado e funcionando no Replit.
+Clerk já integrado e funcional para login/logout básicos.
+Supabase conectado (variável DATABASE_URL configurada).
+Prisma inicializado, schema definido (conforme o que geramos) e primeira migração executada (npx prisma migrate dev).
+Fase 1: Configurações Iniciais e Modelos de Dados (Duração: 1 dia)
+
+Revisão do Schema Prisma:
+Confirme que o schema.prisma no seu Replit está exatamente como o que finalizamos (com IDs Int, enums, relações corretas).
+Se fez alguma alteração, rode npx prisma migrate dev --name <nome_da_migracao> e npx prisma generate.
+Configuração de Papéis (Roles) com Clerk e Middleware:
+No Clerk, explore como adicionar metadados de papel (Admin/Aluno) aos usuários. O admin do sistema precisará ter o papel "ADMIN".
+Crie um middleware.ts na raiz do seu projeto Next.js para proteger rotas.
+Ex: Rotas sob /admin só podem ser acessadas por usuários com papel "ADMIN".
+Ex: Rotas sob /aluno só podem ser acessadas por usuários com papel "ALUNO" (ou qualquer usuário autenticado, dependendo da sua lógica inicial).
+Adapte o template Precedent para ter layouts distintos para /admin e /aluno se ele ainda não os tiver estruturados dessa forma.
+app/admin/layout.tsx
+app/aluno/layout.tsx
+Fase 2: CRUDs do Painel Administrativo - Estrutura do Conteúdo (Duração: 3-5 dias)
+Foco: Criar a espinha dorsal para organizar o conteúdo. Use Server Components para listagens, Server Actions para mutações.
+
+Gerenciamento de Cursos (app/admin/cursos): (RF001)
+Página para listar cursos.
+Formulário (modal ou página separada) para criar/editar Curso (título, descrição).
+Funcionalidade para excluir Curso.
+Gerenciamento de Módulos (app/admin/cursos/[cursoId]/modulos): (RF002)
+Dentro da página de um curso, liste seus Módulos.
+Formulário para criar/editar Módulo (título, ordem, isEnabled).
+Funcionalidade para excluir Módulo.
+Gerenciamento de Categorias de Conteúdo (app/admin/cursos/[cursoId]/modulos/[moduloId]/categorias): (RF003)
+Dentro da página de um módulo, liste suas Categorias de Conteúdo.
+Formulário para criar/editar Categoria (nome).
+Funcionalidade para excluir Categoria.
+Fase 3: CRUDs do Painel Administrativo - Banco de Questões e Flashcards (Duração: 4-6 dias)
+Foco: Ferramentas para o admin popular o sistema com material de avaliação e estudo.
+
+Gerenciamento de Categorias do Banco de Questões (app/admin/banco-questoes/categorias-banco): (RF004)
+CRUD completo para as categorias que organizam o banco de questões.
+Gerenciamento de Questões (app/admin/banco-questoes/questoes): (RF005)
+Listagem de questões (com filtro por Categoria do Banco).
+Formulário para criar/editar Questão (enunciado, tipo, opções JSON, resposta correta JSON, associação à Categoria do Banco).
+Funcionalidade para excluir Questão.
+Gerenciamento de Decks de Flashcards (dentro de uma Categoria de Conteúdo - .../categorias/[categoriaId]/decks): (RF008)
+Na página de uma Categoria de Conteúdo, liste seus Decks de Flashcards.
+Formulário para criar/editar Deck (nome).
+Funcionalidade para excluir Deck.
+Gerenciamento de Flashcards (dentro de um Deck - .../decks/[deckId]/flashcards): (RF008)
+Na página de um Deck, liste seus Flashcards.
+Formulário para criar/editar Flashcard (frente, verso).
+Funcionalidade para excluir Flashcard.
+Fase 4: CRUDs do Painel Administrativo - Avaliações e Usuários (Duração: 3-4 dias)
+
+Gerenciamento de Avaliações/Provas (dentro de uma Categoria de Conteúdo - .../categorias/[categoriaId]/avaliacoes): (RF006)
+Na página de uma Categoria de Conteúdo, liste suas Avaliações.
+Formulário para criar/editar Avaliação (título, máx. tentativas).
+Interface para adicionar/remover/ordenar Questões do Banco de Questões em uma Avaliação.
+Funcionalidade para excluir Avaliação.
+Gerenciamento de Usuários (Alunos) (app/admin/usuarios): (RF014, RF015)
+Listar usuários com papel "ALUNO".
+Formulário para cadastrar um novo aluno:
+Admin insere dados básicos (ex: email).
+Use a API de Admin do Clerk para criar o usuário no sistema Clerk (isso pode exigir uma Route Handler no Next.js para chamar a API do Clerk com sua chave secreta, para não expô-la no frontend).
+Após sucesso na criação no Clerk, salve o clerkUserID e defina role = ALUNO na sua tabela Users no Supabase.
+Interface para inscrever/desinscrever alunos de Cursos (CourseEnrollments).
+Fase 5: Funcionalidades da Área do Aluno - Consumo (Duração: 5-7 dias)
+Foco: Permitir que o aluno acesse e interaja com o conteúdo criado.
+
+Navegação do Conteúdo (app/aluno/cursos e sub-rotas): (RF010)
+Listar cursos inscritos.
+Ao selecionar um curso, listar módulos (que estão isEnabled).
+Ao selecionar um módulo, listar categorias de conteúdo.
+Ao selecionar uma categoria, listar Provas e Decks de Flashcards disponíveis.
+Realizar Avaliações (app/aluno/avaliacoes/[avaliacaoId]): (RF011, RF011.1)
+Interface para o aluno ver e responder as questões de uma prova.
+Lógica para submeter a prova, calcular a nota, registrar a tentativa (Student_Assessments, Student_Assessment_Answers).
+Permitir reiniciar a prova (respeitando maxTentativasPermitidas).
+Estudar Flashcards (app/aluno/decks/[deckId]): (RF013, RF013.1, RF013.2, RF013.3)
+Interface de visualização (frente/verso).
+Botões "Acertei"/"Errei".
+Implementação do algoritmo de Repetição Espaçada (SRS) via Server Action para atualizar StudentFlashcardStatus.
+Opção para reiniciar o progresso em um deck.
+Fase 6: Relatórios (MVP) (Duração: 3-5 dias)
+Foco: Implementar os relatórios mais críticos para admin e aluno.
+
+Relatórios do Aluno (app/aluno/meus-relatorios ou similar):
+Progresso geral nos cursos. (RF010.1)
+Resultados das avaliações realizadas (notas, o que errou/acertou). (RF012, RF012.1)
+Progresso nos flashcards (cards aprendidos, a revisar). (RF013.4)
+Relatórios do Administrador (app/admin/relatorios):
+Lista de questões mais erradas/acertadas nas avaliações. (RF018)
+Relatório individual de aluno (seleciona aluno, vê progresso detalhado em avaliações e flashcards). (RF017)
+Relatório geral de progresso da plataforma (alunos ativos, média de desempenho agregada). (RF016)
+Análise de Desempenho em Flashcards (agregado). (Conforme RF016)
+Fase 7: PWA, Testes e Refinamentos (Duração: 2-3 dias)
+
+Configuração PWA: Usar next-pwa ou similar para adicionar manifest e service worker básico (para caching).
+Testes Manuais: Testar todos os fluxos do admin e do aluno em diferentes navegadores (se possível).
+Refinamento de UI/UX: Com base nos testes, ajustar a usabilidade.
+Revisão Final no Replit: Checar configurações de build, variáveis de ambiente para "produção" (se o Replit tiver essa distinção fácil).
+Dicas para o Desenvolvimento no Replit:
+
+Commits Frequentes: Use a integração Git do Replit para salvar seu progresso regularmente.
+Pequenas Iterações: Implemente uma pequena parte da funcionalidade, teste, e depois siga para a próxima.
+Server Actions: Para mutações de dados (criar, atualizar, deletar) a partir de formulários em Client Components, Server Actions são uma ótima abordagem no App Router.
+Busca de Dados: Use Server Components com async/await para buscar dados diretamente com o Prisma Client.
+Componentes Reutilizáveis: O template Precedent (com Shadcn/UI) já incentiva isso. Crie seus próprios componentes reutilizáveis para formulários, tabelas, cards, etc.

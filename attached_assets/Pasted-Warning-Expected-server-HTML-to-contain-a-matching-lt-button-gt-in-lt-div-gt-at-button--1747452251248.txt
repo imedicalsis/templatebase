@@ -1,0 +1,40 @@
+Warning: Expected server HTML to contain a matching &lt;button&gt; in &lt;div&gt;.
+    at button
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+clerk-react@5.9.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/clerk-react/dist/index.mjs:655:86)
+    at HOC (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+clerk-react@5.9.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/clerk-react/dist/chunk-LVLBRUHJ.mjs:278:5)
+    at SignedOut (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+clerk-react@5.9.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/clerk-react/dist/chunk-LVLBRUHJ.mjs:304:20)
+    at ClerkLoaded (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+clerk-react@5.9.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/clerk-react/dist/chunk-LVLBRUHJ.mjs:312:22)
+    at div
+    at div
+    at div
+    at Suspense
+    at NavBar (webpack-internal:///(app-pages-browser)/./components/layout/navbar.tsx:23:87)
+    at Suspense
+    at body
+    at html
+    at SWRConfig (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/swr@2.2.5_react@18.3.1/node_modules/swr/dist/_internal/index.mjs:571:13)
+    at OrganizationProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+shared@2.8.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/shared/dist/react/index.mjs:91:3)
+    at ClerkContextProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+clerk-react@5.9.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/clerk-react/dist/index.mjs:1730:11)
+    at ClerkProviderBase (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+clerk-react@5.9.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/clerk-react/dist/index.mjs:1805:11)
+    at Hoc (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+clerk-react@5.9.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@clerk/clerk-react/dist/index.mjs:113:5)
+    at ClerkNextOptionsProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+nextjs@5.6.2_next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1__react-dom@18.3._77q7cdl2ylb5f34seu25q26bbm/node_modules/@clerk/nextjs/dist/esm/client-boundary/NextOptionsContext.js:16:11)
+    at ClientClerkProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/@clerk+nextjs@5.6.2_next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1__react-dom@18.3._77q7cdl2ylb5f34seu25q26bbm/node_modules/@clerk/nextjs/dist/esm/app-router/client/ClerkProvider.js:59:13)
+    at ClerkProvider (Server)
+    at RootLayout (Server)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/redirect-boundary.js:74:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/redirect-boundary.js:82:11)
+    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/not-found-boundary.js:76:9)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/not-found-boundary.js:84:11)
+    at DevRootNotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/dev-root-not-found-boundary.js:33:11)
+    at ReactDevOverlay (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/react-dev-overlay/app/ReactDevOverlay.js:87:9)
+    at HotReload (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:321:11)
+    at Router (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/app-router.js:207:11)
+    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/error-boundary.js:113:9)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.28_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/components/error-boundary.js:160:11)
+    at AppRouter…
+Hydration failed because the initial UI does not match what was rendered on the server.
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+Hydration failed because the initial UI does not match what was rendered on the server.
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+There was an error while hydrating this Suspense boundary. Switched to client rendering.
+See more info here: https://nextjs.org/docs/messages/react-hydration-error

@@ -1,0 +1,76 @@
+// Localização: components/layout/navbar.tsx
+"use client";
+
+import Link from "next/link";
+import Image from "next/image"; // Importação do Image adicionada
+import { Suspense } from "react";
+import useScroll from "@/lib/hooks/use-scroll"; // Seu hook useScroll
+import {
+  ClerkLoaded, // Importe ClerkLoaded
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/nextjs";
+
+export default function NavBar() {
+  const scrolled = useScroll(50);
+
+  return (
+    <Suspense fallback={<div className="h-16 w-full" />}> {/* Fallback para Suspense */}
+      <div
+        className={`fixed top-0 flex w-full justify-center ${
+          scrolled
+            ? "border-b border-gray-200 bg-white/50 backdrop-blur-xl"
+            : "bg-white/0"
+        } z-30 transition-all`}
+      >
+        <div className="mx-5 flex h-16 w-full max-w-screen-xl items-center justify-between">
+          <Link href="/" className="flex items-center font-display text-2xl">
+            <Image
+              src="/logo.png" // Ajuste para o caminho do seu logo
+              alt="Logo da Aplicação" // Alt text mais descritivo
+              width={30}
+              height={30}
+              className="mr-2 rounded-sm"
+            />
+            <p>IMEDICAL</p> {/* Seu nome de aplicação */}
+          </Link>
+          <div className="flex items-center gap-2">
+            {/* Envolva os componentes do Clerk com ClerkLoaded */}
+            <ClerkLoaded>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button
+                    type="button"
+                    className="rounded-full border border-black bg-black px-4 py-1.5 text-sm text-white transition-colors hover:bg-white hover:text-black"
+                  >
+                    Entrar
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "h-10 w-10", // Exemplo de como customizar a aparência
+                    },
+                  }}
+                />
+                {/* Opcional: Adicionar link para o Dashboard se o utilizador for ADMIN */}
+                {/* Você precisaria obter o 'role' aqui, talvez de um hook customizado ou do estado global se o tiver */}
+                {/* Exemplo (requer lógica adicional para obter o 'role'): */}
+                {/* {userRole === 'ADMIN' && (
+                  <Link href="/admin" className="ml-2 ...">
+                    Admin Dashboard
+                  </Link>
+                )} */}
+              </SignedIn>
+            </ClerkLoaded>
+          </div>
+        </div>
+      </div>
+    </Suspense>
+  );
+}

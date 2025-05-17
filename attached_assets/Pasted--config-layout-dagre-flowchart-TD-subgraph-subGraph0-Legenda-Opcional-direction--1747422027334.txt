@@ -1,0 +1,128 @@
+---
+config:
+  layout: dagre
+---
+flowchart TD
+  subgraph subGraph0["Legenda Opcional"]
+    direction LR
+        Leg1["Ação do Usuário / Página"]
+        Leg2{"Decisão / Condição"}
+  end
+    A["Início: Visitante acessa a Plataforma EAD"] --> B{"Usuário possui conta?"}
+    B -- Não --> BA("Contate o Administrador para Criação de Conta")
+    B -- Sim --> C("Página de Login")
+    C --> D{"Login Válido?"}
+    D -- Não --> C
+    D -- Sim --> E{"Qual o papel do Usuário?"}
+    E -- Aluno --> F["Dashboard do Aluno"]
+    E -- Administrador --> ADM_F["Dashboard do Administrador"]
+
+    %% FLUXO DO ALUNO
+    F --> F1["Ver Meus Cursos"]
+    F --> F2["Ver Meu Progresso Geral"]
+    F --> F3["Ver Meus Relatórios Detalhados"]
+    
+    F1 --> F1_A("Seleciona um Curso")
+    F1_A --> F1_B["Visualizar Módulos do Curso (habilitados)"]
+    F1_B --> F1_C("Seleciona um Módulo")
+    F1_C --> F1_C1["Visualizar Categorias de Conteúdo do Módulo"]
+    F1_C1 --> F1_C2("Seleciona uma Categoria de Conteúdo")
+    F1_C2 --> F1_G["Acessar Avaliações (Provas) da Categoria"]
+    F1_C2 --> F1_O["Acessar Decks de Flashcards da Categoria"]
+    
+    F1_G --> F1_H("Seleciona uma Avaliação")
+    F1_H --> F1_I{"Prova já realizada?"}
+    F1_I -- Sim --> F1_J["Ver Resultado Anterior"]
+    F1_J --> F1_K{"Deseja reiniciar a Prova?"}
+    F1_K -- Sim --> F1_L["Iniciar/Continuar Prova"]
+    F1_K -- Não --> F1_G
+    F1_I -- Não --> F1_L
+    F1_L --> F1_M["Responder Questões"]
+    F1_M --> F1_N["Submeter Prova"]
+    F1_N --> F1_J
+    
+    F1_O --> F1_P("Seleciona um Deck de Flashcards")
+    F1_P --> F1_Q["Estudar Flashcards (Frente -> Verso)"]
+    F1_P --> F1_S{"Deseja reiniciar o Deck? (Zerar progresso SR)"}
+    F1_Q --> F1_R{"Indicar Acerto/Erro para Rep. Espaçada"}
+    F1_R --> F1_Q
+    F1_S -- Sim --> F1_Q
+    F1_S -- Não --> F1_O
+    
+    F2 --> F2_A["Visualizar Progresso Percentual por Curso e Geral <br>(baseado em avaliações e flashcards)"]
+    
+    F3 --> F3_A["Relatório de Desempenho em Avaliações"]
+    F3 --> F3_B["Relatório de Estudo de Flashcards <br>(Ex: cards aprendidos, a revisar)"]
+
+    %% FLUXO DO ADMINISTRADOR
+    ADM_F --> ADM_F1["Gerenciar Cursos"]
+    ADM_F --> ADM_F3["Gerenciar Banco de Questões"]
+    ADM_F --> ADM_F4["Gerenciar Usuários (Alunos)"]
+    ADM_F --> ADM_F5["Ver Relatórios do Sistema"]
+    
+    ADM_F1 --> ADM_F1_A["Listar/Adicionar Cursos"]
+    ADM_F1_A --> ADM_F1_B("Seleciona Curso para Editar/Ver Detalhes ou Cria Novo")
+    ADM_F1_B --> ADM_F1_C["Formulário do Curso (CRUD): <br>Título, Descrição"]
+    ADM_F1_C --> ADM_F1_D["Gerenciar Módulos do Curso"]
+    
+    ADM_F1_D --> ADM_F1_E["Listar/Adicionar Módulos"]
+    ADM_F1_D --> ADM_F1_A
+    %% Volta para lista de cursos
+    
+    ADM_F1_E --> ADM_F1_F("Seleciona Módulo para Editar ou Cria Novo")
+    ADM_F1_F --> ADM_F1_G["Formulário do Módulo (CRUD): <br>Título, Ordem, Habilitar/Desabilitar"]
+    
+    ADM_F1_G --> ADM_F1_CC["Gerenciar Categorias de Conteúdo do Módulo"]
+    ADM_F1_G --> ADM_F1_D
+    %% Volta para lista de módulos
+    
+    ADM_F1_CC --> ADM_F1_CCA["Listar/Adicionar Categorias de Conteúdo"]
+    ADM_F1_CCA --> ADM_F1_CCB("Seleciona Categoria para Editar ou Cria Nova")
+    ADM_F1_CCB --> ADM_F1_CCC["Formulário da Categoria de Conteúdo (CRUD): <br>Nome"]
+    
+    ADM_F1_CCC --> ADM_F1_CCL["Gerenciar Avaliações (Provas) da Categoria"]
+    ADM_F1_CCC --> ADM_F1_CCO["Gerenciar Decks de Flashcards da Categoria"]
+    ADM_F1_CCC --> ADM_F1_CCA
+    %% Volta para lista de categorias do módulo
+        
+    ADM_F1_CCL --> ADM_F1_M["Listar/Criar Avaliações (Provas) <br>Seleciona Questões do Banco"]
+    ADM_F1_M --> ADM_F1_N("Edita/Exclui Avaliação")
+    ADM_F1_N --> ADM_F1_CCL
+    %% Volta para Gerenciar Avaliações da Categoria
+        
+    ADM_F1_CCO --> ADM_F1_P["Listar/Criar Decks de Flashcards"]
+    ADM_F1_P --> ADM_F1_QDeck("Seleciona Deck para Editar ou Cria Novo")
+    
+    ADM_F1_QDeck --> ADM_F1_RDeck["Formulário do Deck (CRUD): <br>Nome"]
+    ADM_F1_QDeck --> ADM_F1_CCO
+    %% Volta para Gerenciar Decks da Categoria
+    
+    ADM_F1_RDeck --> ADM_F1_SFlash["Gerenciar Flashcards do Deck (CRUD): <br>Frente, Verso"]
+    ADM_F1_SFlash --> ADM_F1_QDeck
+    %% Volta para Edição do Deck
+        
+    ADM_F3 --> ADM_F3_CAT["Gerenciar Categorias do Banco de Questões"]
+    ADM_F3 --> ADM_F3_A["Listar/Adicionar Questões ao Banco"]
+
+    ADM_F3_CAT --> ADM_F3_CATA["Listar/Adicionar Categorias do Banco"]
+    ADM_F3_CATA --> ADM_F3_CATB("Seleciona Categoria do Banco para Editar ou Cria Nova")
+    ADM_F3_CATB --> ADM_F3_CATC["Formulário da Categoria do Banco (CRUD): <br>Nome"]
+    ADM_F3_CATC --> ADM_F3_CATA
+    %% Volta para Lista de Categorias do Banco
+
+    ADM_F3_A --> ADM_F3_B("Seleciona Questão para Editar ou Cria Nova")
+    ADM_F3_B --> ADM_F3_C["Formulário da Questão (CRUD): <br>Enunciado, Tipo, Opções, <br>Resposta Correta, Categoria do Banco"]
+    ADM_F3_C --> ADM_F3_A
+    %% Volta para Lista de Questões
+        
+    ADM_F4 --> ADM_F4_A["Listar/Adicionar Usuários (Alunos)"]
+    ADM_F4_A --> ADM_F4_B("Seleciona Usuário para Editar ou Cria Novo Aluno")
+    ADM_F4_B --> ADM_F4_C["Formulário do Usuário (CRUD): <br>Nome, Email, Papel (Aluno)]
+    ADM_F4_C --> ADM_F4_D["Matricular/Desmatricular Aluno em Cursos']
+    ADM_F4_D --> ADM_F4_A
+        
+    ADM_F5 --> ADM_F5_A["Relatório Geral de Progresso de Alunos"]
+    ADM_F5 --> ADM_F5_B["Selecionar Aluno para Relatório Individual Detalhado"]
+    ADM_F5 --> ADM_F5_D["Relatório de Estatísticas de Questões <br>(Mais/Menos Acertadas/Erradas)"]
+    
+    ADM_F5_B --> ADM_F5_C["Visualizar Detalhes do Aluno <br>(Progresso, Avaliações, Flashcards)"]

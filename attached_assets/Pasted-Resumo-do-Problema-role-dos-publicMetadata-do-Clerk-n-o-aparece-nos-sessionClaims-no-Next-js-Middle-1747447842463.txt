@@ -1,0 +1,62 @@
+Resumo do Problema: role dos publicMetadata do Clerk não aparece nos sessionClaims no Next.js Middleware (App Router) hospedado no Replit
+Stack Tecnológica:
+
+Framework: Next.js v14.2.28 (App Router)
+
+Autenticação: Clerk (usando @clerk/nextjs/server para clerkMiddleware)
+
+Hospedagem: Replit
+
+Banco de Dados (para referência futura, não diretamente envolvido no problema dos claims): Supabase (via Prisma)
+
+Objetivo:
+Estou a tentar implementar um controlo de acesso baseado em papéis (ADMIN, ALUNO) no meu middleware Next.js. A ideia é que o role seja definido nos publicMetadata de cada utilizador diretamente no dashboard do Clerk (por exemplo, {"role": "ADMIN"}).
+
+Problema:
+O role que defino nos publicMetadata do utilizador no Clerk não está a ser incluído nos sessionClaims que acedo através da função auth() (do clerkMiddleware) dentro do meu middleware.ts. Como resultado, ao tentar ler auth().sessionClaims?.role (ou auth().sessionClaims?.metadata?.role), o valor é sempre undefined.
+
+Configuração do JWT Template no Clerk:
+Criei um JWT Template customizado no dashboard do Clerk com os seguintes "Claims" para tentar injetar o role:
+
+{
+  "role": "{{user.public_metadata.role}}"
+}
+
+Também tentei a forma aninhada:
+
+{
+  "metadata": {
+    "role": "{{user.public_metadata.role}}"
+  }
+}
+
+Apesar de o template estar configurado, salvo, e de eu o ter selecionado na secção "Customize session token" da minha instância do Clerk (para usar este template para os tokens de sessão), os sessionClaims que recebo no middleware não contêm este claim customizado.
+
+Exemplo de sessionClaims recebido no middleware.ts (logado com um utilizador que tem publicMetadata.role: "ADMIN" definido no Clerk):
+
+{
+  "azp": "URL_DA_APLICACAO_REPLIT",
+  "exp": 1747XXXXXX,
+  "iat": 1747XXXXXX,
+  "iss": "URL_DA_INSTANCIA_CLERK.clerk.accounts.dev",
+  "nbf": 1747XXXXXX,
+  "sid": "sess_XXXXXXXXXXXXXXXXXXXXXX",
+  "sub": "user_XXXXXXXXXXXXXXXXXXXXX", // ID do utilizador
+  "v": 2
+  // Nenhum campo "role" ou "metadata" com "role" aparece aqui
+}
+
+O que já foi verificado/tentado:
+
+Os publicMetadata do utilizador no Clerk estão corretamente configurados com { "role": "ADMIN" } ou { "role": "ALUNO" }.
+
+O meu middleware.ts está a tentar ler sessionClaims.role (ou anteriormente sessionClaims.metadata.role).
+
+Variáveis de ambiente no Replit como CLERK_TRUST_HOST=true e NEXT_PUBLIC_URL (com a URL pública do Replit) foram configuradas e testadas. A variável CLERK_PROXY_URL foi testada mas causou erros de hidratação e foi removida.
+
+O problema de redirect_url a usar localhost foi resolvido usando process.env.NEXT_PUBLIC_URL para construir a URL de redirecionamento no middleware.
+
+Logout completo, limpeza de cache do Next.js (rm -rf .next), e reinício do servidor foram feitos após cada alteração na configuração do Clerk ou do middleware.
+
+Pergunta para o Fórum:
+Como posso garantir que um claim customizado (role), originado dos publicMetadata do utilizador, seja incluído nos sessionClaims acessíveis pelo clerkMiddleware no Next.js App Router, especialmente num ambiente como o Replit? Há algum passo específico para "ativar" ou "definir como padrão" um JWT Template para tokens de sessão que possa estar em falta na interface atual do Clerk, ou alguma consideração especial para ambientes com proxy?

@@ -1,0 +1,270 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Certifique-se de que esta variável de ambiente está configurada
+}
+
+enum Role {
+  ADMIN
+  ALUNO
+}
+
+enum LearningStatus {
+  NOVO
+  APRENDENDO
+  REVISANDO
+  DOMINADO
+}
+
+model User {
+  id                      Int                     @id @default(autoincrement())
+  clerkUserID             String                  @unique
+  nome                    String?
+  email                   String                  @unique
+  role                    Role                    @default(ALUNO)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  courseEnrollments       CourseEnrollment[]
+  studentAssessments      StudentAssessment[]
+  studentFlashcardStatuses StudentFlashcardStatus[]
+
+  @@map("users")
+}
+
+model Course {
+  id                      Int                     @id @default(autoincrement())
+  tituloCurso             String
+  descricao               String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  modules                 Module[]
+  courseEnrollments       CourseEnrollment[]
+
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id                      Int                     @id @default(autoincrement())
+  dataInscricao           DateTime                @default(now())
+  progressoPercentualCurso Decimal                 @default(0.0) @db.Decimal(5, 2)
+
+  userId                  Int
+  user                    User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId                Int
+  course                  Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@map("course_enrollments")
+}
+
+model Module {
+  id                      Int                     @id @default(autoincrement())
+  tituloModulo            String
+  ordem                   Int                     @default(0)
+  isEnabled               Boolean                 @default(true)
+
+  courseId                Int
+  course                  Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  contentCategories       ContentCategory[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([courseId])
+  @@map("modules")
+}
+
+model ContentCategory {
+  id                      Int                     @id @default(autoincrement())
+  nomeCategoria           String
+
+  moduleId                Int
+  module                  Module                  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  assessments             Assessment[]
+  flashcardDecks          FlashcardDeck[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([moduleId])
+  @@map("content_categories")
+}
+
+model QuestionBankCategory {
+  id                      Int                     @id @default(autoincrement())
+  nomeCategoria           String                  @unique
+
+  questions               Question[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@map("question_bank_categories")
+}
+
+model Question {
+  id                      Int                     @id @default(autoincrement())
+  enunciado               String
+  tipoQuestao             String
+  opcoesJSON              Json?
+  respostaCorretaJSON     Json
+
+  qBankCategoryId         Int
+  qBankCategory           QuestionBankCategory    @relation(fields: [qBankCategoryId], references: [id], onDelete: Restrict)
+
+  assessmentQuestions     AssessmentQuestion[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([qBankCategoryId])
+  @@map("questions")
+}
+
+model Assessment {
+  id                      Int                     @id @default(autoincrement())
+  tituloAvaliacao         String
+  maxTentativasPermitidas Int                     @default(1)
+
+  contentCategoryId       Int
+  contentCategory         ContentCategory         @relation(fields: [contentCategoryId], references: [id], onDelete: Cascade)
+
+  assessmentQuestions     AssessmentQuestion[]
+  studentAssessments      StudentAssessment[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([contentCategoryId])
+  @@map("assessments")
+}
+
+model AssessmentQuestion {
+  id                      Int                     @id @default(autoincrement())
+  ordemNaAvaliacao        Int
+
+  assessmentId            Int
+  assessment              Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  questionId              Int
+  question                Question                @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime                @default(now())
+
+  @@unique([assessmentId, questionId])
+  @@unique([assessmentId, ordemNaAvaliacao])
+  @@index([assessmentId])
+  @@index([questionId])
+  @@map("assessment_questions")
+}
+
+model StudentAssessment {
+  id                      Int                     @id @default(autoincrement())
+  numeroTentativa         Int
+  dataConclusao           DateTime?
+  nota                    Decimal                 @db.Decimal(5, 2)
+
+  assessmentId            Int
+  assessment              Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  userId                  Int
+  user                    User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  answers                 StudentAssessmentAnswer[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([assessmentId])
+  @@index([userId])
+  @@map("student_assessments")
+}
+
+model StudentAssessmentAnswer {
+  id                      Int                     @id @default(autoincrement())
+  respostaDadaJSON        Json?
+  isCorreta               Boolean?
+
+  studentAssessmentId     Int
+  studentAssessment       StudentAssessment       @relation(fields: [studentAssessmentId], references: [id], onDelete: Cascade)
+
+  questionId              Int
+
+  createdAt               DateTime                @default(now())
+
+  @@index([studentAssessmentId])
+  @@index([questionId])
+  @@map("student_assessment_answers")
+}
+
+model FlashcardDeck {
+  id                      Int                     @id @default(autoincrement())
+  nomeDeck                String
+
+  contentCategoryId       Int
+  contentCategory         ContentCategory         @relation(fields: [contentCategoryId], references: [id], onDelete: Cascade)
+
+  flashcards              Flashcard[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([contentCategoryId])
+  @@map("flashcard_decks")
+}
+
+model Flashcard {
+  id                      Int                     @id @default(autoincrement())
+  conteudoFrente          String
+  conteudoVerso           String
+
+  deckId                  Int
+  deck                    FlashcardDeck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  studentFlashcardStatuses StudentFlashcardStatus[]
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([deckId])
+  @@map("flashcards")
+}
+
+model StudentFlashcardStatus {
+  id                          Int                     @id @default(autoincrement())
+  statusAprendizado          LearningStatus
+  intervaloProximaRevisaoDias Int
+  dataUltimaRevisao           DateTime
+  fatorFacilidade             Decimal                 @db.Decimal(4, 2)
+  contadorRevisoes            Int
+
+  userId                      Int
+  user                        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  flashcardId                 Int
+  flashcard                   Flashcard               @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  createdAt                   DateTime                @default(now())
+  updatedAt                   DateTime                @updatedAt
+
+  @@unique([userId, flashcardId])
+  @@index([userId])
+  @@index([flashcardId])
+  @@map("student_flashcard_statuses")
+}

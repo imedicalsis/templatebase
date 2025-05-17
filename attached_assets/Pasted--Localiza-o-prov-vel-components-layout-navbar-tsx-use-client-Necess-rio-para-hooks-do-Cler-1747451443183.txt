@@ -1,0 +1,65 @@
+// Localização provável: components/layout/navbar.tsx
+"use client"; // Necessário para hooks do Clerk e interatividade
+
+import Link from "next/link";
+import { Suspense } from "react"; // Suspense já estava no seu snippet
+import {
+  ClerkLoaded, // Importe ClerkLoaded
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/nextjs";
+// Importe seu Logo ou outros componentes da NavBar se necessário
+// import PrecedentLogo from "./logo"; // Exemplo se você tiver um componente de logo
+
+export default function NavBar() {
+  return (
+    <Suspense fallback={<div className="h-16 w-full" />}>
+      {" "}
+      {/* Seu Suspense existente */}
+      <div className="fixed top-0 z-30 flex w-full justify-center border-b border-gray-200 bg-white/50 backdrop-blur-xl transition-all">
+        <div className="mx-5 flex h-16 w-full max-w-screen-xl items-center justify-between">
+          <Link href="/" className="flex items-center font-display text-2xl">
+            {/* <PrecedentLogo /> Se você tiver um componente de logo */}
+            <img
+              alt="Logo"
+              loading="lazy"
+              width="30"
+              height="30"
+              decoding="async"
+              className="mr-2 rounded-sm"
+              src="/logo.png" // Ajuste para o caminho do seu logo
+            />
+            <p>IMEDICAL</p>
+          </Link>
+          <div>
+            {/* Envolva os componentes do Clerk com ClerkLoaded */}
+            <ClerkLoaded>
+              <SignedIn>
+                {/* Utilizador está logado, mostra UserButton */}
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "h-10 w-10", // Exemplo de como customizar a aparência
+                    },
+                  }}
+                />
+              </SignedIn>
+              <SignedOut>
+                {/* Utilizador não está logado, mostra botão de Login */}
+                <SignInButton mode="modal">
+                  {/* Adapte o botão ao estilo do seu template Precedent se necessário */}
+                  <button className="rounded-lg border border-black bg-black px-4 py-1.5 text-sm font-medium text-white transition-all hover:bg-white hover:text-black active:bg-stone-100 dark:border-stone-700 dark:hover:border-stone-200 dark:hover:bg-black dark:hover:text-white dark:active:bg-stone-800">
+                    Entrar
+                  </button>
+                </SignInButton>
+              </SignedOut>
+            </ClerkLoaded>
+          </div>
+        </div>
+      </div>
+    </Suspense>
+  );
+}
