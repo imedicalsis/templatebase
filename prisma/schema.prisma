@@ -1,0 +1,274 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // A DATABASE_URL nos Secrets do Replit deve ser a do Supabase Pooler
+  // com todos os parâmetros necessários (pgbouncer, sslmode, connection_limit)
+  // para a execução da aplicação e também para migrações/db push.
+  url      = env("DATABASE_URL") 
+}
+
+enum Role {
+  ADMIN
+  ALUNO
+}
+
+enum LearningStatus {
+  NOVO
+  APRENDENDO
+  REVISANDO
+  DOMINADO
+}
+
+model User {
+  id                      Int                     @id @default(autoincrement())
+  clerkUserID             String                  @unique // ID do Clerk
+  nome                    String?                 // Nome do usuário
+  email                   String                  @unique // Email do usuário
+  role                    Role                    @default(ALUNO) // Papel do usuário, padrão ALUNO
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  courseEnrollments       CourseEnrollment[]      // Inscrições do usuário em cursos
+  studentAssessments      StudentAssessment[]     // Avaliações realizadas pelo usuário
+  studentFlashcardStatuses StudentFlashcardStatus[] // Status dos flashcards para este usuário
+
+  @@map("users") // Mapeia para a tabela "users" no banco
+}
+
+model Course {
+  id                      Int                     @id @default(autoincrement())
+  tituloCurso             String                  // Título do curso
+  descricao               String?                 // Descrição opcional do curso
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  modules                 Module[]                // Módulos pertencentes a este curso
+  courseEnrollments       CourseEnrollment[]      // Inscrições de usuários neste curso
+
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id                      Int                     @id @default(autoincrement())
+  dataInscricao           DateTime                @default(now()) // Data da inscrição
+  progressoPercentualCurso Decimal?                @default(0.0) @db.Decimal(5, 2) // Progresso percentual no curso
+
+  userId                  Int                     // Chave estrangeira para User
+  user                    User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId                Int                     // Chave estrangeira para Course
+  course                  Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@unique([userId, courseId]) // Um usuário só pode se inscrever uma vez no mesmo curso
+  @@index([userId])
+  @@index([courseId])
+  @@map("course_enrollments")
+}
+
+model Module {
+  id                      Int                     @id @default(autoincrement())
+  tituloModulo            String                  // Título do módulo
+  ordem                   Int                     @default(0) // Para ordenação dos módulos dentro de um curso
+  isEnabled               Boolean                 @default(true) // Para controlar visibilidade
+
+  courseId                Int                     // Chave estrangeira para Course
+  course                  Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  contentCategories       ContentCategory[]       // Categorias de conteúdo dentro deste módulo
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([courseId])
+  @@map("modules")
+}
+
+model ContentCategory {
+  id                      Int                     @id @default(autoincrement())
+  nomeCategoria           String                  // Nome da categoria de conteúdo (ex: "Trauma Torácico")
+
+  moduleId                Int                     // Chave estrangeira para Module
+  module                  Module                  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  assessments             Assessment[]            // Avaliações (provas) dentro desta categoria
+  flashcardDecks          FlashcardDeck[]         // Decks de flashcards dentro desta categoria
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([moduleId])
+  @@map("content_categories")
+}
+
+model QuestionBankCategory {
+  id                      Int                     @id @default(autoincrement())
+  nomeCategoria           String                  @unique // Nome da categoria para organizar o banco de questões (ex: "Cardiologia", "Trauma")
+
+  questions               Question[]              // Questões pertencentes a esta categoria do banco
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@map("question_bank_categories")
+}
+
+model Question {
+  id                      Int                     @id @default(autoincrement())
+  enunciado               String                  // O texto da questão
+  tipoQuestao             String                  // Ex: "MULTIPLA_ESCOLHA", "VERDADEIRO_FALSO"
+  opcoesJSON              Json?                   // JSON para armazenar opções de múltipla escolha, etc.
+  respostaCorretaJSON     Json                    // JSON para armazenar a(s) resposta(s) correta(s)
+
+  qBankCategoryId         Int                     // Chave estrangeira para QuestionBankCategory
+  qBankCategory           QuestionBankCategory    @relation(fields: [qBankCategoryId], references: [id], onDelete: Restrict) // Restringe deleção de categoria se tiver questões
+
+  assessmentQuestions     AssessmentQuestion[]    // Associações desta questão com avaliações
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([qBankCategoryId])
+  @@map("questions")
+}
+
+model Assessment {
+  id                      Int                     @id @default(autoincrement())
+  tituloAvaliacao         String                  // Título da avaliação (prova)
+  maxTentativasPermitidas Int                     @default(1) // Número máximo de tentativas permitidas
+
+  contentCategoryId       Int                     // Chave estrangeira para ContentCategory (a qual categoria de conteúdo esta prova pertence)
+  contentCategory         ContentCategory         @relation(fields: [contentCategoryId], references: [id], onDelete: Cascade)
+
+  assessmentQuestions     AssessmentQuestion[]    // Questões que compõem esta avaliação
+  studentAssessments      StudentAssessment[]     // Tentativas dos alunos nesta avaliação
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([contentCategoryId])
+  @@map("assessments")
+}
+
+// Tabela de junção para relacionar Questões a uma Avaliação específica e definir sua ordem
+model AssessmentQuestion {
+  id                      Int                     @id @default(autoincrement())
+  ordemNaAvaliacao        Int                     // Ordem da questão dentro da avaliação
+
+  assessmentId            Int                     // Chave estrangeira para Assessment
+  assessment              Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  questionId              Int                     // Chave estrangeira para Question
+  question                Question                @relation(fields: [questionId], references: [id], onDelete: Cascade) // Se uma questão for deletada do banco, ela sai das provas
+
+  createdAt               DateTime                @default(now())
+
+  @@unique([assessmentId, questionId])      // Uma questão só pode aparecer uma vez por avaliação
+  @@unique([assessmentId, ordemNaAvaliacao]) // A ordem deve ser única dentro de uma avaliação
+  @@index([assessmentId])
+  @@index([questionId])
+  @@map("assessment_questions")
+}
+
+model StudentAssessment {
+  id                      Int                     @id @default(autoincrement())
+  numeroTentativa         Int                     // Número da tentativa do aluno para esta avaliação
+  dataConclusao           DateTime?               // Data de conclusão da tentativa (pode ser nulo se em andamento)
+  nota                    Decimal?                @db.Decimal(5, 2) // Nota obtida (ex: 8.75), pode ser nula se não corrigida
+
+  assessmentId            Int                     // Chave estrangeira para Assessment
+  assessment              Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  userId                  Int                     // Chave estrangeira para User
+  user                    User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  answers                 StudentAssessmentAnswer[] // Respostas do aluno para esta tentativa
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([assessmentId])
+  @@index([userId])
+  @@map("student_assessments")
+}
+
+model StudentAssessmentAnswer {
+  id                      Int                     @id @default(autoincrement())
+  respostaDadaJSON        Json?                   // Resposta dada pelo aluno (pode ser nulo se não respondida)
+  isCorreta               Boolean?                // Indica se a resposta foi correta (pode ser nulo se não avaliada)
+
+  studentAssessmentId     Int                     // Chave estrangeira para StudentAssessment (a qual tentativa esta resposta pertence)
+  studentAssessment       StudentAssessment       @relation(fields: [studentAssessmentId], references: [id], onDelete: Cascade)
+
+  questionId              Int                     // ID da questão respondida (para referência e análise)
+
+  createdAt               DateTime                @default(now())
+
+  @@index([studentAssessmentId])
+  @@index([questionId])
+  @@map("student_assessment_answers")
+}
+
+model FlashcardDeck {
+  id                      Int                     @id @default(autoincrement())
+  nomeDeck                String                  // Nome do deck de flashcards
+
+  contentCategoryId       Int                     // Chave estrangeira para ContentCategory (a qual categoria de conteúdo este deck pertence)
+  contentCategory         ContentCategory         @relation(fields: [contentCategoryId], references: [id], onDelete: Cascade)
+
+  flashcards              Flashcard[]             // Flashcards dentro deste deck
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([contentCategoryId])
+  @@map("flashcard_decks")
+}
+
+model Flashcard {
+  id                      Int                     @id @default(autoincrement())
+  conteudoFrente          String                  // Conteúdo da frente do flashcard
+  conteudoVerso           String                  // Conteúdo do verso do flashcard
+
+  deckId                  Int                     // Chave estrangeira para FlashcardDeck
+  deck                    FlashcardDeck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  studentFlashcardStatuses StudentFlashcardStatus[] // Status de aprendizado deste flashcard para diferentes usuários
+
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([deckId])
+  @@map("flashcards")
+}
+
+model StudentFlashcardStatus {
+  id                          Int                     @id @default(autoincrement())
+  statusAprendizado          LearningStatus          // Status de aprendizado (NOVO, APRENDENDO, REVISANDO, DOMINADO)
+  intervaloProximaRevisaoDias Int                     // Intervalo em dias para a próxima revisão (SRS)
+  dataUltimaRevisao           DateTime                // Data da última vez que este flashcard foi revisado pelo usuário
+  fatorFacilidade             Decimal?                @db.Decimal(4, 2) // Fator de facilidade para algoritmos SRS (ex: SM-2)
+  contadorRevisoes            Int                     @default(0) // Quantas vezes este flashcard foi revisado
+
+  userId                      Int                     // Chave estrangeira para User
+  user                        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  flashcardId                 Int                     // Chave estrangeira para Flashcard
+  flashcard                   Flashcard               @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  createdAt                   DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@unique([userId, flashcardId]) // Um usuário tem um status único por flashcard
+  @@index([userId])
+  @@index([flashcardId])
+  @@map("student_flashcard_statuses")
+}
