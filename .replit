@@ -3,6 +3,7 @@ run = "npm run dev"
 
 [nix]
 channel = "stable-24_05"
+packages = ["yakut"]
 
 [deployment]
 run = ["sh", "-c", "npm run dev"]
@@ -34,3 +35,15 @@ externalPort = 4200
 [[ports]]
 localPort = 3006
 externalPort = 5000
+
+[workflows]
+runButton = "Dev Server"
+
+[[workflows.workflow]]
+name = "Dev Server"
+author = 42745155
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run dev --turbo --no-cache"
