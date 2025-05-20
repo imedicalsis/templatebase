@@ -1,156 +1,188 @@
 import { headers } from "next/headers";
-import { WebhookEvent } from "@clerk/nextjs/server";
-import { Webhook } from "svix";
-import { PrismaClient, Role } from "@prisma/client"; // Importe Role do Prisma Client
+import { WebhookEvent, UserJSON } from "@clerk/nextjs/server"; // UserJSON importado para tipagem correta
+import { Webhook } from "svix"; // Pacote para verificação da assinatura do webhook
+import { PrismaClient, Role } from "@prisma/client"; // Role importado para tipagem
 
-// Recomenda-se usar uma instância singleton do Prisma em produção para otimizar conexões.
-// Ex: crie um arquivo lib/prisma.ts e importe 'prisma' de lá.
-// Para este exemplo, manteremos a instanciação local, mas é um ponto de atenção.
-const prisma = new PrismaClient();
+// Recomenda-se usar uma instância singleton do Prisma em produção.
+// Exemplo: criar um arquivo lib/prisma.ts
+// import { PrismaClient } from '@prisma/client'
+// export const prisma = new PrismaClient()
+// E depois importar aqui: import { prisma } from '@/lib/prisma';
+const prisma = new PrismaClient(); // Instância local para simplicidade agora
 
+const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+
+// Função para validar a requisição do webhook
 async function validateRequest(req: Request, headersList: Headers) {
-  // Parâmetro 'headersList' agora é do tipo 'Headers'
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
-
   if (!WEBHOOK_SECRET) {
-    // É crucial que esta variável esteja configurada nos Secrets do Replit.
-    console.error("CLERK_WEBHOOK_SECRET not found in environment variables.");
+    console.error(
+      "CRITICAL: CLERK_WEBHOOK_SECRET is not defined in environment variables.",
+    );
     throw new Error(
       "Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or Replit Secrets",
     );
   }
 
-  // Obter os headers específicos do Svix (usados pelo Clerk para webhooks)
+  // Obtenção dos headers Svix necessários para validação
   const svix_id = headersList.get("svix-id");
   const svix_timestamp = headersList.get("svix-timestamp");
   const svix_signature = headersList.get("svix-signature");
 
-  // Se algum dos headers Svix não estiver presente, é um erro.
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    console.error("Missing Svix headers");
+    console.error("Webhook request missing Svix headers.");
     throw new Error("Error occured -- no svix headers");
   }
 
-  // Obter o payload (corpo da requisição) como JSON.
-  const payload = await req.json();
-  const body = JSON.stringify(payload); // O Svix espera o corpo como string para verificação.
+  const payload = await req.json(); // O corpo da requisição
+  const body = JSON.stringify(payload); // O Svix espera o corpo como uma string
 
-  // Criar uma nova instância do Webhook Svix com seu secret.
-  const wh = new Webhook(WEBHOOK_SECRET);
-
+  const wh = new Webhook(WEBHOOK_SECRET); // Instancia o webhook Svix com o seu segredo
   try {
-    // Verificar a assinatura do payload. Se não for válida, um erro será lançado.
+    // Verifica a assinatura. Se for inválida, lança um erro.
     return wh.verify(body, {
       "svix-id": svix_id,
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature,
-    }) as WebhookEvent; // Faz o cast para o tipo WebhookEvent do Clerk.
+    }) as WebhookEvent; // Faz o cast para o tipo WebhookEvent do Clerk
   } catch (err: any) {
-    // Captura qualquer erro durante a verificação.
     console.error("Error verifying webhook signature:", err.message);
     throw new Error("Error verifying webhook signature: Invalid signature.");
   }
 }
 
+// Handler para requisições POST (o Clerk envia webhooks como POST)
 export async function POST(req: Request) {
-  try {
-    const headersList = headers(); // Obtém os headers da requisição atual.
-    const evt = await validateRequest(req, headersList); // Valida a requisição.
-    const eventType = evt.type; // Tipo do evento (ex: 'user.created').
-    const eventData = evt.data; // Dados do evento (contém o objeto User do Clerk).
+  // Log inicial para confirmar que a rota está a ser chamada
+  console.log(
+    `!!! WEBHOOK /api/webhooks/clerk ROTA ACIONADA !!! Timestamp: ${new Date().toISOString()}`,
+  );
 
-    console.log(
-      `Received webhook event: ${eventType} for Clerk User ID: ${eventData.id}`,
-    );
+  try {
+    const headersList = headers(); // Obtém os headers da requisição atual
+    const evt = await validateRequest(req, headersList); // Valida a requisição
+    const eventType = evt.type; // Tipo do evento (ex: 'user.created')
+    const eventData = evt.data; // Dados do evento
+
+    console.log(`Received webhook event: ${eventType} for ID: ${eventData.id}`);
+
+    // Garante que eventData.id existe para operações de banco de dados
+    const clerkIdFromEvent = eventData.id;
+    if (!clerkIdFromEvent) {
+      console.error("Webhook event data is missing 'id'. Event:", evt);
+      return new Response("Error: Event data missing ID", { status: 400 });
+    }
 
     switch (eventType) {
       case "user.created":
-        // Tenta obter o 'role' dos metadados públicos do usuário no Clerk.
-        const rawRoleCreated = (eventData.public_metadata as any)?.role as
-          | string
-          | undefined;
-        // Define o role para o enum do Prisma, com 'ALUNO' como padrão.
+        // Para user.created, eventData é do tipo UserJSON
+        const createdUserData = eventData as UserJSON;
+        // Lê o 'role' dos publicMetadata (se existir)
+        const rawRoleCreated = (createdUserData.public_metadata as any)
+          ?.role as string | undefined;
+        // Define o papel para o tipo Enum do Prisma, com ALUNO como padrão
         const roleToCreate: Role =
           rawRoleCreated === Role.ADMIN ? Role.ADMIN : Role.ALUNO;
+        const emailCreated =
+          createdUserData.email_addresses?.[0]?.email_address;
 
+        // Verifica se o email existe, pois é obrigatório no schema User
+        if (!emailCreated) {
+          console.error(
+            `User ${clerkIdFromEvent} created event missing email. Skipping DB create.`,
+          );
+          return new Response("Error: User created event missing email", {
+            status: 400,
+          });
+        }
+
+        // Cria o utilizador no banco de dados
         await prisma.user.create({
           data: {
-            clerkUserID: eventData.id, // Corrigido para clerkUserID
-            email: eventData.email_addresses?.[0]?.email_address ?? null, // Corrigido e mais seguro
-            // Você pode adicionar outros campos como nome, se configurados no Clerk e no seu schema
-            // nome: eventData.first_name,
+            clerkUserID: clerkIdFromEvent,
+            email: emailCreated,
             role: roleToCreate,
+            nome: createdUserData.first_name || undefined, // Adiciona o primeiro nome se existir
           },
         });
         console.log(
-          `User ${eventData.id} created in local DB with role ${roleToCreate}.`,
+          `User ${clerkIdFromEvent} created in local DB with role ${roleToCreate}.`,
         );
         break;
 
       case "user.updated":
-        const rawRoleUpdated = (eventData.public_metadata as any)?.role as
-          | string
-          | undefined;
-        // Prepara o objeto de dados para atualização. Só inclui campos que realmente existem.
-        const dataToUpdate: {
-          email?: string | null;
-          role?: Role;
-          // Adicione outros campos que queira sincronizar
-          // nome?: string | null;
-        } = {
-          email: eventData.email_addresses?.[0]?.email_address ?? null,
-          // nome: eventData.first_name ?? null,
-        };
+        // Para user.updated, eventData é do tipo UserJSON
+        const updatedUserData = eventData as UserJSON;
+        const rawRoleUpdated = (updatedUserData.public_metadata as any)
+          ?.role as string | undefined;
 
-        // Atualiza o 'role' apenas se um valor válido for fornecido nos metadados.
+        const dataToUpdate: {
+          email?: string; // Email é obrigatório, só atualiza se tiver um novo válido
+          role?: Role;
+          nome?: string | null; // Nome é opcional
+        } = {};
+
+        const emailUpdated =
+          updatedUserData.email_addresses?.[0]?.email_address;
+        if (emailUpdated) {
+          dataToUpdate.email = emailUpdated;
+        }
+
+        // Atualiza o papel se um valor válido for fornecido
         if (rawRoleUpdated === Role.ADMIN || rawRoleUpdated === Role.ALUNO) {
           dataToUpdate.role = rawRoleUpdated as Role;
         }
-        // Se rawRoleUpdated for undefined/null, o role existente no DB não será alterado por esta chave.
 
-        await prisma.user.update({
-          where: { clerkUserID: eventData.id }, // Corrigido para clerkUserID
-          data: dataToUpdate,
-        });
-        console.log(`User ${eventData.id} updated in local DB.`);
+        // Atualiza o nome se fornecido, ou define como null se ausente
+        dataToUpdate.nome = updatedUserData.first_name || null;
+
+        // Só executa a atualização se houver dados para atualizar
+        if (Object.keys(dataToUpdate).length > 0) {
+          await prisma.user.update({
+            where: { clerkUserID: clerkIdFromEvent },
+            data: dataToUpdate,
+          });
+          console.log(`User ${clerkIdFromEvent} updated in local DB.`);
+        } else {
+          console.log(
+            `User ${clerkIdFromEvent} update event received, but no relevant data changed or provided for DB update.`,
+          );
+        }
         break;
 
       case "user.deleted":
-        // Opcional: verificar se o usuário existe antes de tentar deletar.
-        // O Clerk pode enviar um evento de deleção para um usuário que não chegou a ser criado no seu DB
-        // se o webhook 'user.created' falhou anteriormente por algum motivo.
-        const userToDelete = await prisma.user.findUnique({
-          where: { clerkUserID: eventData.id }, // Corrigido para clerkUserID
+        // Para user.deleted, eventData é DeletedObjectJSON, que só tem 'id' e 'deleted'.
+        // clerkIdFromEvent já foi extraído e verificado.
+        const userExists = await prisma.user.findUnique({
+          where: { clerkUserID: clerkIdFromEvent },
         });
-
-        if (userToDelete) {
+        if (userExists) {
           await prisma.user.delete({
-            where: { clerkUserID: eventData.id }, // Corrigido para clerkUserID
+            where: { clerkUserID: clerkIdFromEvent },
           });
-          console.log(`User ${eventData.id} deleted from local DB.`);
+          console.log(`User ${clerkIdFromEvent} deleted from local DB.`);
         } else {
           console.log(
-            `User ${eventData.id} for deletion not found in local DB. Skipping.`,
+            `User ${clerkIdFromEvent} for deletion not found in local DB. Skipping.`,
           );
         }
         break;
       default:
-        // É uma boa prática logar eventos não tratados para o caso de você querer suportá-los no futuro.
+        // Log para eventos não tratados
         console.log(`Unhandled webhook event type: ${eventType}`);
     }
 
-    // Retorna uma resposta de sucesso para o Clerk.
+    // Retorna sucesso para o Clerk
     return new Response("Webhook processed successfully", { status: 200 });
   } catch (error: any) {
-    // Loga o erro no servidor e retorna uma resposta de erro para o Clerk.
+    // Tratamento de erros
     console.error("Error processing webhook:", error.message);
-    // Não envie error.stack para o cliente em produção por motivos de segurança.
+    const status = error.message.includes("Invalid signature") ? 401 : 500; // Status HTTP apropriado
     return new Response(
       JSON.stringify({
         error: "Error processing webhook",
         details: error.message,
       }),
-      { status: error.message.includes("Invalid signature") ? 401 : 500 }, // 401 para falha de assinatura, 500 para outros erros internos
+      { status },
     );
   }
 }
